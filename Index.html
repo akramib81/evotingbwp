@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --navy: #0b2545;
+      --navy-dark: #071a33;
+      --gold: #c9a227;
+      --gold-light: #e6c866;
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --grey: #6b7280;
+      --danger: #b3261e;
+      --success: #1e7e34;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: #1a1a1a;
+    }
+    .topbar {
+      background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+      color: #fff;
+      padding: 22px 20px;
+      text-align: center;
+      border-bottom: 4px solid var(--gold);
+      position: relative;
+    }
+    .topbar h1 {
+      font-family: 'Lora', serif;
+      margin: 0 0 4px 0;
+      font-size: 22px;
+      letter-spacing: 0.3px;
+    }
+    .topbar p { margin: 0; font-size: 13px; color: var(--gold-light); }
+
+    .container { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+    .container.wide { max-width: 1100px; }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(11,37,69,0.08);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    #loginView, #adminLoginView { max-width: 420px; margin: 40px auto; }
+    #loginView h2, #adminLoginView h2 { font-family:'Lora',serif; color: var(--navy); text-align:center; margin-top:0; }
+    #loginView p.sub { text-align:center; color:var(--grey); font-size:14px; margin-top:-8px; }
+    input[type=text], input[type=password], input[type=number], input[type=file], textarea, select {
+      width: 100%; padding: 13px 14px; font-size: 16px;
+      border: 1.5px solid #d7dce3; border-radius: 10px; margin-top: 6px;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--navy); }
+    label.field-label { font-size: 13px; font-weight: 600; color: var(--navy); display:block; margin-top:12px; }
+    .btn {
+      display: inline-block; width: 100%; text-align:center;
+      background: var(--navy); color: #fff; border: none;
+      padding: 14px; font-size: 16px; font-weight: 600;
+      border-radius: 10px; cursor: pointer; margin-top: 16px;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--navy-dark); }
+    .btn:disabled { background: #9aa4b2; cursor: not-allowed; }
+    .btn-gold { background: var(--gold); color: var(--navy-dark); }
+    .btn-gold:hover { background: var(--gold-light); }
+    .btn-danger { background: var(--danger); }
+    .btn-sm { padding:6px 12px; font-size:12px; margin-top:0; width:auto; }
+    .msg { padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-top: 14px; }
+    .msg.error { background: #fdecea; color: var(--danger); border: 1px solid #f5c2bd; }
+    .msg.success { background: #e9f7ef; color: var(--success); border: 1px solid #b7e4c7; }
+    .link-small { display:block; text-align:center; margin-top:16px; font-size:12px; color:var(--grey); text-decoration:none; }
+    .link-small:hover { color:var(--navy); text-decoration:underline; }
+
+    .admin-corner {
+      position: absolute; top: 18px; right: 18px;
+      font-size: 12px; color: var(--gold-light);
+      border: 1px solid rgba(230,200,102,0.5); border-radius: 999px;
+      padding: 6px 14px; cursor: pointer; background: rgba(255,255,255,0.05);
+    }
+    .admin-corner:hover { background: rgba(255,255,255,0.12); }
+
+    .bahagian-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; }
+    .bahagian-header h3 { font-family:'Lora',serif; color: var(--navy); margin:0; font-size:18px; }
+    .counter { font-size: 13px; font-weight:600; color: var(--navy); background: #eef2f8; padding: 5px 12px; border-radius: 999px; }
+    .counter.full { background: var(--gold); color: var(--navy-dark); }
+
+    .calon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .calon-card {
+      border: 2px solid #e5e9ef; border-radius: 12px; padding: 12px;
+      text-align: center; cursor: pointer; position: relative;
+      transition: border-color 0.15s, transform 0.1s;
+      background: #fff;
+    }
+    .calon-card:hover { transform: translateY(-2px); }
+    .calon-card.selected { border-color: var(--gold); background: #fffdf5; }
+    .calon-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background:#eef1f5; }
+    .calon-card .nama { font-weight: 700; font-size: 14px; color: var(--navy); }
+    .calon-card .kelas { font-size: 12px; color: var(--grey); margin: 2px 0; }
+    .calon-card .motto { font-size: 12px; color: #444; font-style: italic; margin-top: 4px; }
+    .check-badge {
+      position: absolute; top: 8px; right: 8px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #fff; border: 2px solid #ccc;
+      display:flex; align-items:center; justify-content:center;
+      font-size: 13px; color: transparent;
+    }
+    .calon-card.selected .check-badge { background: var(--gold); border-color: var(--gold); color: var(--navy-dark); font-weight:700; }
+
+    .progress-bar { display:flex; gap:6px; margin-bottom: 20px; }
+    .progress-seg { flex:1; height:6px; border-radius:3px; background:#e0e5eb; }
+    .progress-seg.done { background: var(--gold); }
+
+    #successView { text-align:center; max-width:480px; margin:60px auto; }
+    #successView .icon { font-size: 56px; }
+
+    .hidden { display: none !important; }
+
+    .tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+    .tab-btn { padding:10px 16px; border-radius:8px; background:#fff; border:1.5px solid #d7dce3; cursor:pointer; font-weight:600; font-size:13px; color:var(--navy); }
+    .tab-btn.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .stat-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom: 20px; }
+    .stat-box { background:#fff; border-radius:12px; padding:18px; text-align:center; box-shadow:0 2px 8px rgba(11,37,69,0.06); }
+    .stat-box .num { font-size:28px; font-weight:700; color:var(--navy); }
+    .stat-box .label { font-size:12px; color:var(--grey); margin-top:4px; }
+    .bahagian-block h3 { font-family:'Lora',serif; color:var(--navy); border-bottom:2px solid var(--gold); padding-bottom:6px; margin-top:0; }
+    table { width:100%; border-collapse: collapse; font-size:13px; }
+    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid #eee; }
+    th { color:var(--navy); font-size:12px; text-transform:uppercase; letter-spacing:0.4px; }
+    tr.winner { background: #fffdf0; }
+    .badge-terpilih { background:var(--gold); color:var(--navy-dark); font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+    .candidate-thumb { width:44px; height:56px; object-fit:cover; border-radius:6px; background:#eee; }
+    canvas { max-height: 260px; }
+    .topbar-admin-actions { text-align:right; max-width:1100px; margin:0 auto 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>SISTEM e-UNDIAN BWP</h1>
+    <p>MRSM &mdash; Sesi 2026/2027</p>
+    <div class="admin-corner" id="btnShowAdminLogin" onclick="showAdminLogin()">🔒 Log Masuk Admin</div>
+  </div>
+
+  <div class="container" id="mainContainer">
+
+    <div id="loginView" class="card">
+      <h2>Log Masuk Pengundi</h2>
+      <p class="sub">Sila masukkan No. Maktab anda untuk mula mengundi.</p>
+      <label class="field-label">No. Maktab</label>
+      <input type="text" id="inputNoMaktab" placeholder="Contoh: 12345" autocomplete="off">
+      <button class="btn" id="btnLogin" onclick="doLogin()">Log Masuk</button>
+      <div id="loginMsg"></div>
+    </div>
+
+    <div id="adminLoginView" class="card hidden">
+      <h2>Log Masuk Admin</h2>
+      <label class="field-label">Kata Laluan</label>
+      <input type="password" id="adminPass">
+      <button class="btn btn-gold" onclick="doAdminLogin()">Log Masuk</button>
+      <div id="adminLoginMsg"></div>
+      <a href="#" class="link-small" onclick="showVoterLogin(); return false;">&larr; Kembali ke log masuk pengundi</a>
+    </div>
+
+    <div id="votingView" class="hidden">
+      <div style="text-align:right;margin-bottom:10px;">
+        <a href="#" class="link-small" style="display:inline;margin:0;" onclick="batalDanKeluar(); return false;">&larr; Log Keluar / Batal</a>
+      </div>
+      <div class="progress-bar" id="progressBar"></div>
+      <div id="bahagianContainer"></div>
+      <div class="card">
+        <button class="btn btn-gold" id="btnSubmit" onclick="confirmSubmit()">Hantar Undian</button>
+        <div id="submitMsg"></div>
+      </div>
+    </div>
+
+    <div id="successView" class="hidden card">
+      <div class="icon">&#10004;</div>
+      <h2 style="font-family:'Lora',serif;color:var(--navy);">Terima Kasih!</h2>
+      <p id="successText" style="color:var(--grey);"></p>
+      <button class="btn btn-gold" onclick="kembaliKeMenuUtama()">Kembali ke Menu Utama</button>
+    </div>
+
+  </div>
+
+  <div class="container wide hidden" id="adminPanelWrapper">
+    <div class="topbar-admin-actions" style="display:flex;justify-content:space-between;align-items:center;">
+      <div id="topbarSesiBadge" style="font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;background:#eee;color:#555;">
+        Memuatkan status...
+      </div>
+      <a href="#" class="link-small" style="display:inline;margin:0;" onclick="logoutAdmin(); return false;">Log Keluar Admin</a>
+    </div>
+    <div class="tabs">
+      <div class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div>
+      <div class="tab-btn" data-tab="calon" onclick="switchTab('calon')">Urus Calon</div>
+      <div class="tab-btn" data-tab="tetapan" onclick="switchTab('tetapan')">Tetapan</div>
+      <div class="tab-btn" data-tab="pengundi" onclick="switchTab('pengundi')">Senarai Pengundi</div>
+    </div>
+
+    <div id="tab-dashboard">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="grid-2">
+        <div class="card"><h3 style="font-family:'Lora',serif;color:var(--navy);margin-top:0;">Peratus Keluar Mengundi</h3><canvas id="chartPartisipasi"></canvas></div>
+        <div class="card" id="bahagianCharts"></div>
+      </div>
+      <div id="bahagianTables"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" style="width:auto;" onclick="loadDashboard()">🔄 Muat Semula Data</button>
+        <button class="btn btn-gold" style="width:auto;" onclick="cetakLaporan()">🖨️ Cetak / Eksport PDF</button>
+      </div>
+    </div>
+
+    <div id="tab-calon" class="hidden">
+      <div class="card">
+        <h3 style="font-family:'Lora',serif;color:var(--navy);margin-top:0;">Tambah Calon Baharu</h3>
+        <label class="field-label">Bahagian</label>
+        <select id="newBahagian">
+          <option value="L4">Lelaki Tingkatan 4</option>
+          <option value="P4">Perempuan Tingkatan 4</option>
+          <option value="L2">Lelaki Tingkatan 2</option>
+          <option value="P2">Perempuan Tingkatan 2</option>
+        </select>
+        <label class="field-label">Nama</label>
+        <input type="text" id="newNama">
+        <label class="field-label">Kelas</label>
+        <input type="text" id="newKelas" placeholder="cth: 4 Cendekiawan">
+        <label class="field-label">Motto</label>
+        <input type="text" id="newMotto">
+        <label class="field-label">Gambar Profil</label>
+        <input type="file" id="newGambar" accept="image/*">
+        <button class="btn btn-gold" style="width:auto;" onclick="addNewCandidate()">Tambah Calon</button>
+        <div id="calonMsg"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-family:'Lora',serif;color:var(--navy);margin-top:0;">Senarai Calon</h3>
+        <table id="candidateTable"><thead><tr><th>Gambar</th><th>Bahagian</th><th>Nama</th><th>Kelas</th><th>Motto</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div id="tab-tetapan" class="hidden">
+      <!-- KAWALAN SESI PENGUNDIAN -->
+      <div class="card" id="sesiCard">
+        <h3 style="font-family:'Lora',serif;color:var(--navy);margin-top:0;">Kawalan Sesi Pengundian</h3>
+        <div id="sesiStatus" style="margin-bottom:16px;"></div>
+        <label class="field-label">Mesej kepada pengundi (bila sesi ditutup)</label>
+        <input type="text" id="sesiMesej" placeholder="cth: Sesi pengundian telah tamat. Terima kasih.">
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="btn btn-gold" style="width:auto;" id="btnBukaSesi" onclick="kawalsesi(true)">
+            ▶ Buka Sesi Pengundian
+          </button>
+          <button class="btn btn-danger" style="width:auto;" id="btnTutupSesi" onclick="kawalsesi(false)">
+            ■ Tutup Sesi Pengundian
+          </button>
+        </div>
+        <div id="sesiMsg"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-family:'Lora',serif;color:var(--navy);margin-top:0;">Had Bilangan Pilihan Setiap Bahagian</h3>
+        <p style="color:var(--grey);font-size:13px;">Contoh: jika calon berjumlah 12 dan had pilihan diset 7, pengundi hanya boleh pilih 7 daripada 12 calon.</p>
+        <div id="settingsForm"></div>
+        <button class="btn btn-gold" style="width:auto;" onclick="saveSettings()">Simpan Tetapan</button>
+        <div id="settingsMsg"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-family:'Lora',serif;color:var(--danger);margin-top:0;">Zon Bahaya</h3>
+        <p style="color:var(--grey);font-size:13px;">Reset akan memadam SEMUA rekod undian dan tandakan semula semua pengundi sebagai "Belum Mengundi". Tindakan ini tidak boleh dibatalkan.</p>
+        <button class="btn btn-danger" style="width:auto;" onclick="resetVotes()">Reset Semua Undian</button>
+      </div>
+    </div>
+
+    <div id="tab-pengundi" class="hidden">
+      <div class="card">
+        <h3 style="font-family:'Lora',serif;color:var(--navy);margin-top:0;">Import Senarai Pengundi</h3>
+        <p style="color:var(--grey);font-size:13px;">Tampal senarai No. Maktab (satu setiap baris). Boleh juga format: <code>NoMaktab,Nama</code></p>
+        <textarea id="voterList" rows="8" placeholder="12345,Ahmad bin Ali&#10;12346,Siti binti Osman"></textarea>
+        <button class="btn btn-gold" style="width:auto;" onclick="importVotersList()">Import</button>
+        <div id="importMsg"></div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  const BAHAGIAN_ORDER = ['L4','P4','L2','P2'];
+  const BAHAGIAN_LABEL = { L4:'Lelaki Tingkatan 4', P4:'Perempuan Tingkatan 4', L2:'Lelaki Tingkatan 2', P2:'Perempuan Tingkatan 2' };
+
+  function batalDanKeluar() {
+    if (!confirm('Log keluar tanpa menghantar undian? Pilihan anda setakat ini TIDAK akan disimpan.')) return;
+    kembaliKeMenuUtama();
+  }
+
+  function kembaliKeMenuUtama() {
+    // reset semua state pengundi sebelumnya supaya peranti sedia untuk pengundi seterusnya
+    noMaktabSemasa = '';
+    votingData = null;
+    pilihan = { L4: [], P4: [], L2: [], P2: [] };
+
+    document.getElementById('inputNoMaktab').value = '';
+    document.getElementById('loginMsg').innerHTML = '';
+    document.getElementById('submitMsg').innerHTML = '';
+    document.getElementById('bahagianContainer').innerHTML = '';
+
+    document.getElementById('successView').classList.add('hidden');
+    document.getElementById('votingView').classList.add('hidden');
+    document.getElementById('adminLoginView').classList.add('hidden');
+
+    const btnSubmit = document.getElementById('btnSubmit');
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Hantar Undian';
+
+    document.getElementById('btnShowAdminLogin').classList.remove('hidden');
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('inputNoMaktab').focus();
+  }
+
+  function showAdminLogin() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('btnShowAdminLogin').classList.add('hidden');
+    document.getElementById('adminLoginView').classList.remove('hidden');
+  }
+  function showVoterLogin() {
+    document.getElementById('adminLoginView').classList.add('hidden');
+    document.getElementById('btnShowAdminLogin').classList.remove('hidden');
+    document.getElementById('loginView').classList.remove('hidden');
+  }
+  function logoutAdmin() {
+    document.getElementById('adminPanelWrapper').classList.add('hidden');
+    document.getElementById('mainContainer').classList.remove('hidden');
+    showVoterLogin();
+  }
+
+  let noMaktabSemasa = '';
+  let votingData = null;
+  let pilihan = { L4: [], P4: [], L2: [], P2: [] };
+
+  function doLogin() {
+    const val = document.getElementById('inputNoMaktab').value.trim();
+    const btn = document.getElementById('btnLogin');
+    const msgBox = document.getElementById('loginMsg');
+    msgBox.innerHTML = '';
+    if (!val) {
+      msgBox.innerHTML = '<div class="msg error">Sila masukkan No. Maktab.</div>';
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Menyemak...';
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        btn.disabled = false;
+        btn.textContent = 'Log Masuk';
+        if (!res.ok) {
+          msgBox.innerHTML = '<div class="msg error">' + res.mesej + '</div>';
+          return;
+        }
+        noMaktabSemasa = val;
+        loadVotingData();
+      })
+      .withFailureHandler(function (err) {
+        btn.disabled = false;
+        btn.textContent = 'Log Masuk';
+        msgBox.innerHTML = '<div class="msg error">Ralat sistem: ' + err.message + '</div>';
+      })
+      .checkVoter(val);
+  }
+
+  function loadVotingData() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('btnShowAdminLogin').classList.add('hidden');
+    google.script.run
+      .withSuccessHandler(function (data) {
+        votingData = data;
+        renderVoting();
+      })
+      .withFailureHandler(function (err) {
+        alert('Ralat memuatkan data: ' + err.message);
+      })
+      .getVotingData();
+  }
+
+  function renderVoting() {
+    document.getElementById('votingView').classList.remove('hidden');
+    const container = document.getElementById('bahagianContainer');
+    container.innerHTML = '';
+
+    const progressBar = document.getElementById('progressBar');
+    progressBar.innerHTML = BAHAGIAN_ORDER.map(function () {
+      return '<div class="progress-seg"></div>';
+    }).join('');
+
+    BAHAGIAN_ORDER.forEach(function (b) {
+      const info = votingData[b];
+      const section = document.createElement('div');
+      section.className = 'card';
+      section.id = 'section-' + b;
+
+      let cardsHtml = '';
+      info.candidates.forEach(function (c) {
+        // Render kad dengan placeholder dulu, gambar dimuatkan kemudian
+        cardsHtml +=
+          '<div class="calon-card" data-bahagian="' + b + '" data-id="' + c.id + '" onclick="toggleCalon(this)">' +
+            '<div class="check-badge">&#10003;</div>' +
+            '<img id="img-' + c.id + '" src="" alt="' + c.nama + '" style="background:#eef1f5;">' +
+            '<div class="nama">' + c.nama + '</div>' +
+            '<div class="kelas">' + c.kelas + '</div>' +
+            '<div class="motto">&ldquo;' + (c.motto || '') + '&rdquo;</div>' +
+          '</div>';
+      });
+
+      const arahanTeks = info.maxPilihan === 1
+        ? 'Sila pilih <strong>1 (seorang) calon sahaja</strong>.'
+        : 'Sila pilih <strong>' + info.maxPilihan + ' orang calon sahaja</strong>. Tidak kurang dan tidak lebih.';
+
+      section.innerHTML =
+        '<div class="bahagian-header">' +
+          '<h3>' + info.label + '</h3>' +
+          '<span class="counter" id="counter-' + b + '">0 / ' + info.maxPilihan + ' dipilih</span>' +
+        '</div>' +
+        '<div style="background:#fff8e1;border:1.5px solid #c9a227;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;color:#0b2545;">' +
+          '📋 ' + arahanTeks +
+          ' <span style="color:#6b7280;font-size:12px;">(' + info.candidates.length + ' calon tersenarai)</span>' +
+        '</div>' +
+        '<div class="calon-grid">' + cardsHtml + '</div>';
+
+      container.appendChild(section);
+
+      // Muatkan gambar setiap calon satu-satu (lazy)
+      info.candidates.forEach(function (c) {
+        google.script.run
+          .withSuccessHandler(function (dataUrl) {
+            const imgEl = document.getElementById('img-' + c.id);
+            if (!imgEl) return;
+            if (dataUrl) {
+              imgEl.src = dataUrl;
+            } else {
+              imgEl.style.background = '#dde2ea';
+            }
+          })
+          .getCalonGambar(c.id);
+      });
+    });
+  }
+
+  function toggleCalon(el) {
+    const b = el.getAttribute('data-bahagian');
+    const id = el.getAttribute('data-id');
+    const max = votingData[b].maxPilihan;
+    const idx = pilihan[b].indexOf(id);
+
+    if (idx > -1) {
+      // Nyahpilih — sentiasa dibenarkan
+      pilihan[b].splice(idx, 1);
+      el.classList.remove('selected');
+    } else {
+      // Pilih — sekat jika had sudah penuh
+      if (pilihan[b].length >= max) {
+        // Tunjuk amaran ringkas pada counter
+        const counterEl = document.getElementById('counter-' + b);
+        counterEl.textContent = '⚠ Had ' + max + ' dicapai!';
+        counterEl.style.background = '#b3261e';
+        counterEl.style.color = '#fff';
+        setTimeout(function () { updateCounter(b); counterEl.style.background = ''; counterEl.style.color = ''; }, 1500);
+        return;
+      }
+      pilihan[b].push(id);
+      el.classList.add('selected');
+    }
+    updateCounter(b);
+    updateProgress();
+  }
+
+  function updateCounter(b) {
+    const max = votingData[b].maxPilihan;
+    const n = pilihan[b].length;
+    const counterEl = document.getElementById('counter-' + b);
+    counterEl.textContent = n + ' / ' + max + ' dipilih';
+    counterEl.style.background = '';
+    counterEl.style.color = '';
+    if (n === max) {
+      counterEl.className = 'counter full'; // emas — tepat
+    } else {
+      counterEl.className = 'counter'; // kelabu — belum cukup
+    }
+  }
+
+  function updateProgress() {
+    const segs = document.querySelectorAll('.progress-seg');
+    BAHAGIAN_ORDER.forEach(function (b, i) {
+      const max = votingData[b].maxPilihan;
+      if (pilihan[b].length === max) {
+        segs[i].classList.add('done');
+      } else {
+        segs[i].classList.remove('done');
+      }
+    });
+  }
+
+  function confirmSubmit() {
+    // Mesti TEPAT sama dengan maxPilihan — tidak kurang, tidak lebih
+    for (let i = 0; i < BAHAGIAN_ORDER.length; i++) {
+      const b = BAHAGIAN_ORDER[i];
+      const max = votingData[b].maxPilihan;
+      const n = pilihan[b].length;
+      if (n !== max) {
+        const label = votingData[b].label;
+        const arahanMsg = max === 1
+          ? 'Bahagian ' + label + ':\nAnda mesti memilih tepat 1 (seorang) calon.\n(Anda telah pilih: ' + n + ')'
+          : 'Bahagian ' + label + ':\nAnda mesti memilih tepat ' + max + ' orang calon.\n(Anda telah pilih: ' + n + ')';
+        alert('⚠ Pilihan tidak lengkap!\n\n' + arahanMsg);
+        document.getElementById('section-' + b).scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    if (!confirm('Adakah anda pasti dengan pilihan anda?\n\nUndian TIDAK boleh diubah selepas dihantar.')) return;
+
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.textContent = 'Menghantar...';
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (res.ok) {
+          document.getElementById('votingView').classList.add('hidden');
+          document.getElementById('successView').classList.remove('hidden');
+          document.getElementById('successText').textContent = res.mesej;
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Hantar Undian';
+          document.getElementById('submitMsg').innerHTML = '<div class="msg error">' + res.mesej + '</div>';
+        }
+      })
+      .withFailureHandler(function (err) {
+        btn.disabled = false;
+        btn.textContent = 'Hantar Undian';
+        document.getElementById('submitMsg').innerHTML = '<div class="msg error">Ralat sistem: ' + err.message + '</div>';
+      })
+      .submitVote(noMaktabSemasa, pilihan);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('inputNoMaktab').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('adminPass').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') doAdminLogin();
+    });
+  });
+
+  function doAdminLogin() {
+    const pass = document.getElementById('adminPass').value;
+    google.script.run.withSuccessHandler(function (ok) {
+      if (ok) {
+        document.getElementById('mainContainer').classList.add('hidden');
+        document.getElementById('adminPanelWrapper').classList.remove('hidden');
+        loadDashboard();
+      } else {
+        document.getElementById('adminLoginMsg').innerHTML = '<div class="msg error">Kata laluan salah.</div>';
+      }
+    }).adminLogin(pass);
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+    });
+    ['dashboard', 'calon', 'tetapan', 'pengundi'].forEach(function (t) {
+      document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+    });
+    if (tab === 'calon') loadCandidates();
+    if (tab === 'tetapan') loadSettingsForm();
+  }
+
+  let dashboardData = null;
+  let chartInstances = [];
+
+  function loadDashboard() {
+    muatStatusSesi();
+    google.script.run.withSuccessHandler(function (data) {
+      dashboardData = data;
+      renderStats(data);
+      renderPartisipasiChart(data);
+      renderBahagianTables(data);
+    }).getDashboardData();
+  }
+
+  function renderStats(data) {
+    const peratus = data.jumlahBerdaftar > 0 ? Math.round(data.jumlahSudah / data.jumlahBerdaftar * 100) : 0;
+    document.getElementById('statGrid').innerHTML =
+      statBox(data.jumlahBerdaftar, 'Pengundi Berdaftar') +
+      statBox(data.jumlahSudah, 'Sudah Mengundi') +
+      statBox(data.jumlahBelum, 'Belum Mengundi') +
+      statBox(peratus + '%', 'Peratus Keluar Mengundi');
+  }
+  function statBox(num, label) {
+    return '<div class="stat-box"><div class="num">' + num + '</div><div class="label">' + label + '</div></div>';
+  }
+
+  function renderPartisipasiChart(data) {
+    chartInstances.forEach(function (c) { c.destroy(); });
+    chartInstances = [];
+    const ctx = document.getElementById('chartPartisipasi').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Sudah Mengundi', 'Belum Mengundi'],
+        datasets: [{ data: [data.jumlahSudah, data.jumlahBelum], backgroundColor: ['#c9a227', '#d7dce3'] }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+    chartInstances.push(chart);
+  }
+
+  function renderBahagianTables(data) {
+    const chartsDiv = document.getElementById('bahagianCharts');
+    const tablesDiv = document.getElementById('bahagianTables');
+    chartsDiv.innerHTML = '<h3 style="font-family:\'Lora\',serif;color:var(--navy);margin-top:0;">Undian Mengikut Bahagian</h3><select id="bahagianChartSelect" onchange="renderSingleBahagianChart(this.value)">' +
+      BAHAGIAN_ORDER.map(function (b) { return '<option value="' + b + '">' + BAHAGIAN_LABEL[b] + '</option>'; }).join('') +
+      '</select><canvas id="chartBahagian" style="margin-top:12px;"></canvas>';
+
+    tablesDiv.innerHTML = BAHAGIAN_ORDER.map(function (b) {
+      const info = data.bahagian[b];
+      const terpilihIds = {};
+      info.terpilih.forEach(function (c) { terpilihIds[c.id] = true; });
+      const rows = info.calon.map(function (c) {
+        return '<tr class="' + (terpilihIds[c.id] ? 'winner' : '') + '"><td>' + c.nama + '</td><td>' + c.kelas + '</td><td>' + c.undi + '</td><td>' + (terpilihIds[c.id] ? '<span class="badge-terpilih">TERPILIH</span>' : '') + '</td></tr>';
+      }).join('');
+      return '<div class="card bahagian-block"><h3>' + info.label + ' (Had pilihan: ' + info.maxPilihan + ')</h3>' +
+        '<table><thead><tr><th>Nama</th><th>Kelas</th><th>Jumlah Undi</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }).join('');
+
+    renderSingleBahagianChart(BAHAGIAN_ORDER[0]);
+  }
+
+  function renderSingleBahagianChart(b) {
+    const canvas = document.getElementById('chartBahagian');
+    if (!canvas) return;
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    const info = dashboardData.bahagian[b];
+    new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: info.calon.map(function (c) { return c.nama; }),
+        datasets: [{ label: 'Jumlah Undi', data: info.calon.map(function (c) { return c.undi; }), backgroundColor: '#0b2545' }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+  }
+
+  function loadCandidates() {
+    const tbody = document.querySelector('#candidateTable tbody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--grey);">Memuatkan...</td></tr>';
+    google.script.run.withSuccessHandler(function (list) {
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--grey);">Tiada calon direkodkan lagi. Sila tambah calon menggunakan borang di atas.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(function (c) {
+        return '<tr>' +
+          '<td><img id="admimg-' + c.id + '" class="candidate-thumb" src="" style="background:#eee;"></td>' +
+          '<td>' + BAHAGIAN_LABEL[c.bahagian] + '</td>' +
+          '<td>' + c.nama + '</td>' +
+          '<td>' + c.kelas + '</td>' +
+          '<td>' + c.motto + '</td>' +
+          '<td>' + (String(c.aktif).toUpperCase() !== 'FALSE' ? 'Aktif' : 'Tidak Aktif') + '</td>' +
+          '<td><button class="btn btn-sm btn-danger" onclick="removeCandidate(\'' + c.id + '\')">Padam</button></td>' +
+        '</tr>';
+      }).join('');
+      // Lazy load gambar satu-satu
+      list.forEach(function (c) {
+        google.script.run.withSuccessHandler(function (dataUrl) {
+          const imgEl = document.getElementById('admimg-' + c.id);
+          if (imgEl && dataUrl) imgEl.src = dataUrl;
+        }).getCalonGambar(c.id);
+      });
+    }).withFailureHandler(function (err) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger);">Ralat memuatkan senarai: ' + err.message + '</td></tr>';
+    }).getAllCandidatesAdmin();
+  }
+
+  function addNewCandidate() {
+    const nama = document.getElementById('newNama').value.trim();
+    const kelas = document.getElementById('newKelas').value.trim();
+    const motto = document.getElementById('newMotto').value.trim();
+    const bahagian = document.getElementById('newBahagian').value;
+    const fileInput = document.getElementById('newGambar');
+    const msgBox = document.getElementById('calonMsg');
+
+    if (!nama || !kelas) {
+      msgBox.innerHTML = '<div class="msg error">Sila isi nama dan kelas.</div>';
+      return;
+    }
+
+    function submitCandidate(base64, mime) {
+      msgBox.innerHTML = '<div class="msg">Sedang menyimpan calon...</div>';
+      google.script.run.withSuccessHandler(function (res) {
+        if (!res || !res.ok) {
+          msgBox.innerHTML = '<div class="msg error">Gagal tambah calon: ' + (res && res.mesej ? res.mesej : 'Ralat tidak diketahui.') + '</div>';
+          return;
+        }
+        msgBox.innerHTML = '<div class="msg success">Calon berjaya ditambah.</div>';
+        document.getElementById('newNama').value = '';
+        document.getElementById('newKelas').value = '';
+        document.getElementById('newMotto').value = '';
+        fileInput.value = '';
+        loadCandidates();
+      }).withFailureHandler(function (err) {
+        msgBox.innerHTML = '<div class="msg error">Ralat sistem: ' + err.message + '</div>';
+      }).addCandidate({ bahagian: bahagian, nama: nama, kelas: kelas, motto: motto, imageBase64: base64, imageMime: mime });
+    }
+
+    if (fileInput.files && fileInput.files[0]) {
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          // Resize agresif: max 200x267px, JPEG kualiti 0.65
+          // Saiz sasaran: ~15-25KB base64 (~20,000 aksara) — selamat untuk sel Sheet
+          const MAX_W = 200, MAX_H = 267;
+          let w = img.width, h = img.height;
+          const ratio = Math.min(MAX_W / w, MAX_H / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const resized = canvas.toDataURL('image/jpeg', 0.65);
+          const base64 = resized.split(',')[1];
+          submitCandidate(base64, 'image/jpeg');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      submitCandidate(null, null);
+    }
+  }
+
+  function removeCandidate(id) {
+    if (!confirm('Padam calon ini?')) return;
+    google.script.run.withSuccessHandler(function () { loadCandidates(); }).deleteCandidate(id);
+  }
+
+  function loadSettingsForm() {
+    // Muatkan status sesi
+    muatStatusSesi();
+    google.script.run.withSuccessHandler(function (data) {
+      document.getElementById('settingsForm').innerHTML = BAHAGIAN_ORDER.map(function (b) {
+        return '<label class="field-label">' + BAHAGIAN_LABEL[b] + ' &mdash; Had Pilihan</label>' +
+          '<input type="number" min="1" id="setting-' + b + '" value="' + data[b].maxPilihan + '">';
+      }).join('');
+    }).getVotingData();
+  }
+
+  function muatStatusSesi() {
+    google.script.run.withSuccessHandler(function (sesi) {
+      paparStatusSesi(sesi);
+    }).getStatusSesi();
+  }
+
+  function paparStatusSesi(sesi) {
+    const badge = document.getElementById('topbarSesiBadge');
+    const statusDiv = document.getElementById('sesiStatus');
+    const mesejInput = document.getElementById('sesiMesej');
+
+    if (sesi.buka) {
+      if (badge) {
+        badge.style.background = '#e9f7ef';
+        badge.style.color = '#1e7e34';
+        badge.textContent = '● Sesi Pengundian DIBUKA';
+      }
+      if (statusDiv) {
+        statusDiv.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#e9f7ef;border:1.5px solid #b7e4c7;border-radius:10px;">' +
+          '<span style="font-size:22px;">🟢</span>' +
+          '<div><div style="font-weight:700;color:#1e7e34;font-size:15px;">Sesi Pengundian DIBUKA</div>' +
+          '<div style="font-size:12px;color:#2d6a4f;margin-top:2px;">Pengundi boleh log masuk dan mengundi sekarang.</div></div>' +
+          '</div>';
+      }
+    } else {
+      if (badge) {
+        badge.style.background = '#fdecea';
+        badge.style.color = '#b3261e';
+        badge.textContent = '● Sesi Pengundian DITUTUP';
+      }
+      if (statusDiv) {
+        statusDiv.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#fdecea;border:1.5px solid #f5c2bd;border-radius:10px;">' +
+          '<span style="font-size:22px;">🔴</span>' +
+          '<div><div style="font-weight:700;color:#b3261e;font-size:15px;">Sesi Pengundian DITUTUP</div>' +
+          '<div style="font-size:12px;color:#7f1d1d;margin-top:2px;">Mesej kepada pengundi: ' + (sesi.mesej || '(tiada mesej)') + '</div></div>' +
+          '</div>';
+      }
+      if (mesejInput && sesi.mesej) mesejInput.value = sesi.mesej;
+    }
+  }
+
+  function kawalsesi(buka) {
+    const mesej = document.getElementById('sesiMesej').value.trim() ||
+      (buka ? 'Sesi pengundian sedang berlangsung.' : 'Sesi pengundian telah tamat. Terima kasih.');
+    const sahkan = buka
+      ? confirm('Buka sesi pengundian? Pengundi akan dapat log masuk dan mengundi.')
+      : confirm('Tutup sesi pengundian? Pengundi tidak lagi dapat log masuk.');
+    if (!sahkan) return;
+
+    const msgDiv = document.getElementById('sesiMsg');
+    msgDiv.innerHTML = '<div class="msg" style="background:#eef2f8;">Sedang kemaskini...</div>';
+
+    google.script.run.withSuccessHandler(function () {
+      msgDiv.innerHTML = '<div class="msg success">Status sesi berjaya dikemaskini.</div>';
+      muatStatusSesi();
+    }).withFailureHandler(function (err) {
+      msgDiv.innerHTML = '<div class="msg error">Ralat: ' + err.message + '</div>';
+    }).setStatusSesi(buka, mesej);
+  }
+
+  function cetakLaporan() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Menjana laporan...';
+    google.script.run.withSuccessHandler(function (data) {
+      btn.disabled = false;
+      btn.innerHTML = '🖨️ Cetak / Eksport PDF';
+      bukaLaporanPDF(data);
+    }).withFailureHandler(function (err) {
+      btn.disabled = false;
+      btn.innerHTML = '🖨️ Cetak / Eksport PDF';
+      alert('Ralat menjana laporan: ' + err.message);
+    }).getLaporanData();
+  }
+
+  function bukaLaporanPDF(data) {
+    const BAHAGIAN_ORDER_L = ['L4', 'P4', 'L2', 'P2'];
+    const BAHAGIAN_LABEL_L = {
+      L4: 'Lelaki Tingkatan 4', P4: 'Perempuan Tingkatan 4',
+      L2: 'Lelaki Tingkatan 2', P2: 'Perempuan Tingkatan 2'
+    };
+
+    // Jana jadual keputusan setiap bahagian
+    let bahagianHtml = '';
+    BAHAGIAN_ORDER_L.forEach(function (b) {
+      const info = data.bahagian[b];
+      const terpilihIds = {};
+      info.terpilih.forEach(function (c) { terpilihIds[c.id] = true; });
+      const rows = info.calon.map(function (c, idx) {
+        const isTerpilih = terpilihIds[c.id];
+        return '<tr style="' + (isTerpilih ? 'background:#fffbe6;font-weight:600;' : '') + '">' +
+          '<td style="padding:7px 10px;border-bottom:1px solid #eee;text-align:center;">' + (idx + 1) + '</td>' +
+          '<td style="padding:7px 10px;border-bottom:1px solid #eee;">' + c.nama + '</td>' +
+          '<td style="padding:7px 10px;border-bottom:1px solid #eee;">' + c.kelas + '</td>' +
+          '<td style="padding:7px 10px;border-bottom:1px solid #eee;text-align:center;font-weight:700;">' + c.undi + '</td>' +
+          '<td style="padding:7px 10px;border-bottom:1px solid #eee;text-align:center;">' +
+            (isTerpilih ? '<span style="background:#c9a227;color:#071a33;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;">✓ TERPILIH</span>' : '') +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      bahagianHtml +=
+        '<div style="margin-bottom:28px;page-break-inside:avoid;">' +
+          '<h3 style="font-family:Georgia,serif;color:#0b2545;border-left:4px solid #c9a227;padding-left:10px;margin-bottom:10px;">' +
+            BAHAGIAN_LABEL_L[b] +
+            ' <span style="font-size:13px;font-weight:400;color:#6b7280;">(Pilih ' + info.maxPilihan + ' calon)</span>' +
+          '</h3>' +
+          '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+            '<thead><tr style="background:#0b2545;color:#fff;">' +
+              '<th style="padding:8px 10px;text-align:center;width:40px;">Bil.</th>' +
+              '<th style="padding:8px 10px;text-align:left;">Nama Calon</th>' +
+              '<th style="padding:8px 10px;text-align:left;">Kelas</th>' +
+              '<th style="padding:8px 10px;text-align:center;width:80px;">Undi</th>' +
+              '<th style="padding:8px 10px;text-align:center;width:100px;">Status</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+        '</div>';
+    });
+
+    const html =
+      '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+      '<title>Laporan Keputusan Pilihanraya BWP</title>' +
+      '<style>' +
+        'body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1a1a1a;}' +
+        '@media print{' +
+          '.no-print{display:none!important;}' +
+          'body{margin:0;}' +
+          '.page{padding:20mm 20mm 20mm 25mm;}' +
+        '}' +
+        '@media screen{' +
+          '.page{max-width:210mm;margin:0 auto;padding:20mm 20mm 20mm 25mm;box-shadow:0 0 20px rgba(0,0,0,0.1);}' +
+          'body{background:#e5e7eb;}' +
+        '}' +
+      '</style></head><body>' +
+
+      // Butang cetak (hilang masa print)
+      '<div class="no-print" style="position:fixed;top:16px;right:16px;z-index:99;display:flex;gap:8px;">' +
+        '<button onclick="window.print()" style="background:#0b2545;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">🖨️ Cetak / Simpan PDF</button>' +
+        '<button onclick="window.close()" style="background:#fff;color:#0b2545;border:1.5px solid #0b2545;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">✕ Tutup</button>' +
+      '</div>' +
+
+      '<div class="page">' +
+
+      // Kepala laporan
+      '<div style="text-align:center;border-bottom:3px solid #0b2545;padding-bottom:16px;margin-bottom:24px;">' +
+        '<div style="font-size:13px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;">Majlis Amanah Rakyat</div>' +
+        '<h1 style="font-family:Georgia,serif;color:#0b2545;margin:6px 0;font-size:22px;">LAPORAN KEPUTUSAN PILIHANRAYA BWP</h1>' +
+        '<div style="font-size:14px;color:#0b2545;font-weight:600;">MRSM Sultan Azlan Shah &mdash; Sesi 2026/2027</div>' +
+        '<div style="font-size:12px;color:#6b7280;margin-top:6px;">Tarikh Cetak: ' + data.tarikhMasa + '</div>' +
+      '</div>' +
+
+      // Ringkasan kehadiran pengundi
+      '<div style="margin-bottom:28px;page-break-inside:avoid;">' +
+        '<h2 style="font-family:Georgia,serif;color:#0b2545;font-size:16px;margin-bottom:12px;border-bottom:2px solid #c9a227;padding-bottom:6px;">A. Laporan Kehadiran Pengundi</h2>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+          '<thead><tr style="background:#0b2545;color:#fff;">' +
+            '<th style="padding:8px 14px;text-align:left;">Perkara</th>' +
+            '<th style="padding:8px 14px;text-align:center;">Jumlah</th>' +
+            '<th style="padding:8px 14px;text-align:center;">Peratus</th>' +
+          '</tr></thead>' +
+          '<tbody>' +
+            '<tr><td style="padding:8px 14px;border-bottom:1px solid #eee;">Jumlah Pengundi Berdaftar</td><td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;font-weight:700;">' + data.jumlahBerdaftar + '</td><td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;">100%</td></tr>' +
+            '<tr style="background:#e9f7ef;"><td style="padding:8px 14px;border-bottom:1px solid #eee;font-weight:600;">Pengundi Yang Telah Mengundi</td><td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;font-weight:700;color:#1e7e34;">' + data.jumlahSudah + '</td><td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;font-weight:700;color:#1e7e34;">' + data.peratusHadir + '%</td></tr>' +
+            '<tr style="background:#fdecea;"><td style="padding:8px 14px;font-weight:600;">Pengundi Yang Tidak Mengundi</td><td style="padding:8px 14px;text-align:center;font-weight:700;color:#b3261e;">' + data.jumlahBelum + '</td><td style="padding:8px 14px;text-align:center;font-weight:700;color:#b3261e;">' + (100 - data.peratusHadir) + '%</td></tr>' +
+          '</tbody>' +
+        '</table>' +
+      '</div>' +
+
+      // Keputusan mengikut bahagian
+      '<h2 style="font-family:Georgia,serif;color:#0b2545;font-size:16px;margin-bottom:16px;border-bottom:2px solid #c9a227;padding-bottom:6px;">B. Keputusan Undi Mengikut Bahagian</h2>' +
+      bahagianHtml +
+
+      // Tandatangan
+      '<div style="margin-top:40px;page-break-inside:avoid;">' +
+        '<div style="display:flex;gap:60px;justify-content:flex-end;">' +
+          '<div style="text-align:center;">' +
+            '<div style="border-top:1px solid #333;padding-top:6px;margin-top:50px;font-size:12px;">Disahkan oleh</div>' +
+            '<div style="font-size:12px;color:#6b7280;">Penyelaras BWP</div>' +
+          '</div>' +
+          '<div style="text-align:center;">' +
+            '<div style="border-top:1px solid #333;padding-top:6px;margin-top:50px;font-size:12px;">Disahkan oleh</div>' +
+            '<div style="font-size:12px;color:#6b7280;">Pengetua / Penolong Pengetua HEM</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="margin-top:30px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#9ca3af;text-align:center;">' +
+        'Laporan ini dijana secara automatik oleh Sistem e-Undian BWP MRSM Sultan Azlan Shah.' +
+      '</div>' +
+
+      '</div></body></html>';
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+  }
+
+  function saveSettings() {
+    const newSettings = {};
+    BAHAGIAN_ORDER.forEach(function (b) {
+      newSettings[b] = document.getElementById('setting-' + b).value;
+    });
+    google.script.run.withSuccessHandler(function () {
+      document.getElementById('settingsMsg').innerHTML = '<div class="msg success">Tetapan disimpan.</div>';
+    }).updateSettings(newSettings);
+  }
+
+  function resetVotes() {
+    if (!confirm('ADAKAH ANDA PASTI? Semua rekod undian akan dipadam secara kekal.')) return;
+    if (!confirm('Sahkan sekali lagi: padam SEMUA undian dan reset status semua pengundi?')) return;
+    google.script.run.withSuccessHandler(function () {
+      alert('Semua undian telah direset.');
+      loadDashboard();
+    }).resetAllVotes();
+  }
+
+  function importVotersList() {
+    const teks = document.getElementById('voterList').value;
+    if (!teks.trim()) return;
+    google.script.run.withSuccessHandler(function (res) {
+      document.getElementById('importMsg').innerHTML = '<div class="msg success">' + res.ditambah + ' pengundi ditambah. ' + res.dilangkau + ' dilangkau (sudah wujud).</div>';
+      document.getElementById('voterList').value = '';
+    }).importVoters(teks);
+  }
+</script>
+
+</body>
+</html>
